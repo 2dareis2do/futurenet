@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
-var log4js = require("log4js");
-var logger = log4js.getLogger();
+const log4js = require("log4js");
+const logger = log4js.getLogger();
 logger.level = "debug";
 
 log4js.configure({
   appenders: {
-    output: { type: 'file', filename: 'fizzbuzz.log', layout: { type: 'messagePassThrough' }},
+    output: { type: 'file', filename: 'fizzbuzz.log', layout: { type: 'messagePassThrough' } },
     'out': { type: 'stdout', layout: { type: 'basic' } }
   },
   categories: { default: { appenders: ['output'], level: 'info' } }
 });
-
 
 function isPrime(num) {
   if (num < 2) return false;
@@ -27,8 +26,8 @@ function isPrime(num) {
 function fizzBuzz(n) {
   // The script should echo the numbers 1 to 500, each number being on a new line.
   console.time("FizzBuzz++ 1-500");
-  for(i=1; i <= n; i++) {
-    if(isPrime(i)){
+  for (i = 1; i <= n; i++) {
+    if (isPrime(i)) {
       console.log(i + " FizzBuzz++");
       logger.info(i + " FizzBuzz++");
     }
@@ -54,12 +53,8 @@ function fizzBuzz(n) {
 
       }
     }
-
-
   }
   console.timeEnd("FizzBuzz++ 1-500");
 }
 
 fizzBuzz(500);
-
-
