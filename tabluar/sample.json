@@ -1,0 +1,69 @@
+   {
+    "widget": {
+      "data": {
+        "offers": [
+          {
+                    "id": 3305059007,
+                    "match_id": 3305059007,
+                    "product_key": "19228-B07YB99HMR",
+                    "score": 21612,
+                    "percentage": 95,
+                    "popularity": 0,
+                    "product_type": 1000,
+                    "bundle_models": [],
+                    "model_matched": [
+                        "Apple iPad Air 32GB WiFi"
+                    ],
+                    "model": "Apple iPad Air 32GB WiFi",
+                    "model_id": 525545,
+                    "an": "Amazonuk",
+                    "offer": {
+                        "name": "Apple iPad Air 2 - 32GB in Space Grey - WiFi (Renewed)",
+                        "price": "280.68",
+                        "in_stock": true,
+                        "stock_quantity": null,
+                        "currency_iso": "GBP",
+                        "currency_symbol": "&pound;",
+                        "link": "https://target.georiot.com/Proxy.ashx?tsid=8428&GR_URL=https%3A%2F%2Fwww.amazon.co.uk%2Fdp%2FB07YB99HMR%3Ftag%3Dhawk-future-21%26linkCode%3Dogi%26th%3D1%26psc%3D1%26ascsubtag%3Dhawk-custom-tracking-21",
+                        "link_text": "View",
+                        "merchant_link_text": "View at Amazon",
+                        "label": "",
+                        "display_name": "Apple iPad Air 32GB WiFi (32GB Space Grey)",
+                        "display_labels": "(32GB Space Grey)"
+                    },
+                    "image": "https://mos.fie.futurecdn.net/products/19228-B07YB99HMR-100-80.jpg",
+                    "label_image": null,
+                    "model_image": "https://m.media-amazon.com/images/I/51hchgD8q-L.jpg",
+                    "shipping": {
+                        "prime": true,
+                        "url": "https://target.georiot.com/Proxy.ashx?tsid=8428&GR_URL=https%3A%2F%2Famazon.co.uk%2Ftryprimefree%3Ftag%3Dhawk-future-21%26ascsubtag%3Dhawk-custom-tracking-21"
+                    },
+                    "merchant": {
+                        "id": 1027,
+                        "name": "Amazon",
+                        "url": "https://www.amazon.co.uk/",
+                        "logo_url": "https://mos.fie.futurecdn.net/logos/merchants/amazon-uk-14606342093191-100-80.png",
+                        "territory": "GB",
+                        "preference": 99
+                    },
+                    "labels_formatted": [
+                        {
+                            "type": "storage_size",
+                            "value": 32,
+                            "display_value": "32GB",
+                            "display_order": 3,
+                            "priority": 20
+                        },
+                        {
+                            "type": "colour",
+                            "value": "space grey",
+                            "display_value": "Space Grey",
+                            "display_order": 7,
+                            "priority": 5
+                        }
+                    ]
+          }
+        ]
+      }
+    }
+  }
