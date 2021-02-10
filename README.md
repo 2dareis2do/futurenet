@@ -64,3 +64,27 @@ to change your port within server.js to suit
 
 * Unit testing/Linting
 * Suggestions from you
+
+# Parser / Transformer
+
+## About
+
+The path in the script is currently set to:
+
+```
+$parserFilesPath = "./parser_test/";
+```
+
+Make sure that the folder you would like to recurse the log files
+has this name and path relative to the script path. Alternatively you can change
+the path of the script.
+
+Script is simply run:
+
+```
+php index.php
+```
+The script recursively iterates over directory to find any log files and then
+proceeds to beginning transforming to a csv file.
+
+At the moment this is unfinished and not very OO but this is a starting point.
