@@ -1,5 +1,4 @@
 #!/usr/bin/php
-
 <?php
 
 $time_pre = microtime(true);
@@ -17,6 +16,54 @@ foreach ($iterator as $info) {
     $files[] = $info->getPathname();
   }
 }
+echo "Getting App Codes...\n";
+
+
+// lets assume app codes always has this path
+$appCodesPath = $parserFilesPath."appCodes.ini";
+// lets store app codes in an array
+$appCodesArray = file($appCodesPath);
+
+// ok I think we need to parse this to make like an associative array e.g.
+// x ->  "efs-test-app-net = "EFS Test app .net"
+// becomes
+// efs-test-app-net -> "EFS Test app .net"
+// 1. removing the first item in the array
+array_shift($appCodesArray);
+// $length = count($appCodesArray);
+// $slicedAppCodesArray = array_slice($appCodesArray, 1, null, false);
+// var_dump($test[0]);
+// die();
+
+$assocAppCodesArray = [];
+foreach($appCodesArray as $value) {
+  // echo $value;
+  // we need to get the appcode before the "="
+  preg_match("/[A-Za-z0-9 -]+ =/", $value, $matchesequals);
+  if (count($matchesequals)) {
+    $appCode = $matchesequals[0];
+    $appCode = trim($appCode, " =");
+  }
+
+  // we also need the first match the string between the "'s
+  preg_match("/\".+?\"/", $value, $matchesquotes);
+  if (count($matchesquotes)) {
+    $appTitle = $matchesquotes[0];
+    $appTitle = trim($appTitle,"\"");
+  }
+
+  // echo $appCode, $appTitle;
+
+  if ($appCode && $appTitle) {
+    $assocAppCodesArray[$appCode] = $appTitle;
+  }
+
+
+}
+
+var_dump($assocAppCodesArray);
+
+die();
 
 echo "recursing directory to get list/array of files...\n";
 
@@ -75,7 +122,7 @@ foreach ($files as $file) {
         } else {
           $indexedLine = $line;
         }
-        echo $indexedLine;
+        // echo $indexedLine;
         if(file_exists($new_path)) {
           $newHandle = fopen($new_path, 'a');
 
