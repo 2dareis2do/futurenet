@@ -30,10 +30,6 @@ $appCodesArray = file($appCodesPath);
 // efs-test-app-net -> "EFS Test app .net"
 // 1. removing the first item in the array
 array_shift($appCodesArray);
-// $length = count($appCodesArray);
-// $slicedAppCodesArray = array_slice($appCodesArray, 1, null, false);
-// var_dump($test[0]);
-// die();
 
 $assocAppCodesArray = [];
 foreach($appCodesArray as $value) {
@@ -53,17 +49,50 @@ foreach($appCodesArray as $value) {
   }
 
   // echo $appCode, $appTitle;
-
   if ($appCode && $appTitle) {
     $assocAppCodesArray[$appCode] = $appTitle;
   }
 
-
 }
 
-var_dump($assocAppCodesArray);
+// lets try and undestarnd the  mapping required here
 
-die();
+// - subscription_status
+// active_subscriber
+// expired_subscriber
+// never_subscribed
+// subscription_unknown
+
+// - has_downloaded_free_product_status
+// has_downloaded_free_product
+// not_downloaded_free_product
+// downloaded_free_product_unknown
+
+// - has_downloaded_iap_product_status
+
+// has_downloaded_iap_product
+// not_downloaded_free_product
+// downloaded_iap_product_unknown
+
+// 1. int id needed - this could be index if array
+// 2. swap/replace code appCode using lookup
+// 3. deviceId -> deviceToken - heading id
+// 4. contactable -> deviceTokenStatus
+// 5. subscription_status -> tags
+// maybe offer, unless set in tags could be active_subscriber,
+// expired_subscriber,  never_subscribed, or default i.e. 'subscription_unknown'
+// all tags have the string 'subscrib'
+// all tags that contain subscrib should be subscribe column ,
+// if no value set to daefult
+// 6.  has_downloaded_free_product_status -> tags
+// if tag contains the word free i.e.
+// has_downloaded_free_product or  not_downloaded_free_product else
+// downloaded_free_product_unknown
+// 7. has_downloaded_iap_product_status i.e. contains iap
+// i think there is a mistake referncing free here so either has, has not or
+// unknown
+
+//not sure how to match other tags
 
 echo "recursing directory to get list/array of files...\n";
 
@@ -71,72 +100,83 @@ echo "starting load contents \n";
 define("NEWHEADER","id, appCode, deviceId, contactable, subscription_status"
           .", has_downloaded_free_product_status has_downloaded_iap_product_status \n");
 
+define("NEWHEADERARRAY",["id", "appCode", "deviceId", "contactable",
+"subscription_status", "has_downloaded_free_product_status",
+"has_downloaded_iap_product_status"]);
+
+// var_dump(NEWHEADERARRAY);
+
+// die;
 // for each file we want to get the filepath and use this to create
 // a new file path for the csv file for the transformed data
 foreach ($files as $file) {
 // (A) OPEN FILE
   $handle = fopen($file, "r") or die("Error reading file!");
+
+  $FileContentArray = fgetcsv($file);
+
 // get header
   $count = 0;
   $indexedcount = 1;
 
-  while (! feof($handle)) {
+  while (!feof($handle)) {
     // (B) READ LINE BY LINE
-    $line = fgets($handle);
+    $line = fgetcsv($handle);
 
-    // lets always handle the first line differently
-    if ($count === 0) {
-      echo "path to file to be transformed: " . $file . " \n";
+    // var_dump($line);
+    // die;
+    if(is_array($line)) {
 
-      // NEW FILE PATH
-      $new_path = substr_replace($file, "csv", -3, 3);
-      echo "new csv file path: " . $new_path . " \n";
+      // lets always handle the first line differently
+      if ($count === 0) {
+        echo "path to file to be transformed: " . $file . " \n";
 
-      // we now have handle to save new file with.
-      echo "HEADER - to be substituted \n";
-      echo  $line;
-      echo NEWHEADER . "\n";
-      echo "CONTENT \n";
-      // replace header
-      // if file already exists - replace
-      if(file_exists($new_path)) {
-          $newHandle = fopen($new_path, 'w');
-          fwrite($newHandle, NEWHEADER);
-          fclose($newHandle);
-      } else {
-        // if file does not exist create it with BDM - excel requirement?
-          $newHandle = fopen($new_path, 'w');
-          fwrite($newHandle, $BOM); // NEW LINE
-          fwrite($newHandle, NEWHEADER);
-          fclose($newHandle);
-      }
-      // make sure we increment so this code only runs once per file
-      $count++;
-    }
-    else {
-    // everything else apart from first line
+        // NEW FILE PATH
+        $new_path = substr_replace($file, "csv", -3, 3);
+        echo "new csv file path: " . $new_path . " \n";
 
-    // we need an add index only when content of line are not blank
-        if($line) {
-          $indexedLine = $indexedcount . ", " . $line;
-        } else {
-          $indexedLine = $line;
-        }
-        // echo $indexedLine;
+        // we now have handle to save new file with.
+        echo "HEADER - to be substituted \n";
+        // var_dump($line);
+        echo "HEADER - new \n";
+        echo NEWHEADER . "\n";
+        echo "CONTENT \n";
+        // replace header
+        // if file already exists - replace
         if(file_exists($new_path)) {
-          $newHandle = fopen($new_path, 'a');
-
-          fwrite($newHandle, $indexedLine );
-          fclose($newHandle);
-        }
-        else {
+            $newHandle = fopen($new_path, 'w');
+            fputcsv($newHandle, NEWHEADERARRAY);
+            fclose($newHandle);
+        } else {
+          // if file does not exist create it with BDM - excel requirement?
             $newHandle = fopen($new_path, 'w');
             fwrite($newHandle, $BOM); // NEW LINE
-            fwrite($newHandle, $indexedLine);
+            fputcsv($newHandle, NEWHEADERARRAY);
             fclose($newHandle);
-
         }
-        $indexedcount++;
+        // make sure we increment so this code only runs once per file
+        $count++;
+      }
+      else {
+      // everything else apart from first line
+
+      // we need an add index only when content of line are not blank
+          if(file_exists($new_path)) {
+            $newHandle = fopen($new_path, 'a');
+            // var_dump($line);
+            // die;
+            fputcsv($newHandle, $line);
+            fclose($newHandle);
+          }
+          else {
+              $newHandle = fopen($new_path, 'w');
+              fwrite($newHandle, $BOM); // NEW LINE
+              fputcsv($newHandle, $line);
+              fclose($newHandle);
+          }
+          $indexedcount++;
+      }
+
     }
 
   }
