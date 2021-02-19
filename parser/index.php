@@ -3,7 +3,7 @@
 
 /**
  * @file
- * wip - parses and transforms a csv file
+ * wip - parses and transforms a csv file - needs cleaning up
  */
 
 $time_pre = microtime(TRUE);
@@ -58,44 +58,16 @@ foreach ($appCodesArray as $value) {
 
 }
 
-// Lets try and undestarnd the  mapping required here
-// - subscription_status
-// active_subscriber
-// expired_subscriber
-// never_subscribed
-// subscription_unknown
-// - has_downloaded_free_product_status
-// has_downloaded_free_product
-// not_downloaded_free_product
-// downloaded_free_product_unknown
-// - has_downloaded_iap_product_status
-// has_downloaded_iap_product
-// not_downloaded_free_product !!
-// downloaded_iap_product_unknown.
-// 1. int id needed - this could be index if array
-// 2. swap/replace code appCode using lookup
-// 3. deviceId -> deviceToken - heading id
-// 4. contactable -> deviceTokenStatus
-// 5. subscription_status -> tags
-// all tags that contain subscrib should be subscribe column ,
-// if no value set to default default i.e. 'subscription_unknown'
-// 6.  has_downloaded_free_product_status -> tags
-// if tag contains the word free i.e.
-// has_downloaded_free_product or  not_downloaded_free_product else
-// downloaded_free_product_unknown
-// 7. has_downloaded_iap_product_status i.e. contains iap
-// i think there is a mistake referncing free here so either has, has not or
-// unknown
 // not sure how to match other tags - string replacement?
 echo "recursing directory to get list/array of files...\n";
 
 echo "starting load contents \n";
 define("NEWHEADER", "id, appCode, deviceId, contactable, subscription_status"
-          . ", has_downloaded_free_product_status has_downloaded_iap_product_status \n");
+          . ", has_downloaded_free_product_status, has_downloaded_iap_product_status , left_over_tags \n");
 
 define("NEWHEADERARRAY", ["id", "appCode", "deviceId", "contactable",
   "subscription_status", "has_downloaded_free_product_status",
-  "has_downloaded_iap_product_status",
+  "has_downloaded_iap_product_status", "left_over_tags"
 ]);
 
 // For each file we want to get the filepath and use this to create
@@ -149,16 +121,77 @@ foreach ($files as $file) {
       }
       else {
 
-        // We need to substitute the first item using assocAppCodesArray.
-        if ($line) {
-          $key = array_search($line[0], $assocAppCodesArray);
-          $line[0] = $key;
+        // AppID - Lookup assocAppCodesArray - First field
+        $key = array_search($line[0], $assocAppCodesArray);
+        $line[0] = $key;
+
+        // contactable / field 3
+        $line[2] = (int) $line[2];
+        // lets  iterate though and extract all values  that contain status
+
+        // Status - field 4
+        $status_match = "/[A-Za-z_]+subscri+[A-Za-z]+/";
+        preg_match_all($status_match, $line[3], $match_status_tags);
+        $length_status_tags = count($match_status_tags[0]);
+        // lets append a field for now as we need to keep $line[3] for now
+        // lets assume that only one of these can be set i.e. the are mutally
+        // exclusive
+        if ($length_status_tags === 1) {
+          $tag = $match_status_tags[0][0];
+          $line[4] = $tag;
+          // clean up
+          $temp = str_replace($tag,"",$line[3]);
+          $line[3] = $temp;
+        } else {
+          $line[4] = "subscription_unknown";
         }
 
-        // We need an add index.
-        if ($line) {
-          array_unshift($line, $indexedcount);
+        // Status - field 5 has_downloaded_free_product_status
+        $has_downloaded_free_product_status_tags = "/[A-Za-z_]+free+[A-Za-z]+/";
+        preg_match_all($has_downloaded_free_product_status_tags, $line[3], $free_status_tags);
+        $length_free_tags = count($free_status_tags[0]);
+        // lets append a field for now as we need to keep $line[3] for now
+        // lets assume that only one of these can be set i.e. the are mutally
+        // exclusive
+        if ($length_free_tags === 1) {
+          $tag = $free_status_tags[0][0];
+          // set
+          $line[5] = $tag;
+          // clean up
+          $temp = str_replace($tag,"",$line[3]);
+          $line[3] = $temp;
+        } else {
+          $line[5] = "downloaded_free_product_unknown";
         }
+
+        // Status - field 6 has_downloaded_free_product_status
+        $has_downloaded_iap_product_status_tags = "/[A-Za-z_]+iap+[A-Za-z]+/";
+        preg_match_all($has_downloaded_iap_product_status_tags, $line[3], $iap_status_tags);
+        $length_iap_tags = count($iap_status_tags[0]);
+        // lets append a field for now as we need to keep $line[3] for now
+        // lets assume that only one of these can be set i.e. the are mutally
+        // exclusive
+        if ($length_iap_tags === 1) {
+          $tag = $iap_status_tags[0][0];
+          // set
+          $line[6] = $tag;
+          // clean up
+          $temp = str_replace($tag,"",$line[3]);
+          $line[3] = $temp;
+        } else {
+          $line[6] = "downloaded_iap_product_unknown";
+        }
+
+        // lets move leftovers to last column
+        $line[7] = $line[3];
+
+        //remove last column
+
+        // lets move the 4th $line[3] to end
+        array_splice($line, 3, 1);
+
+        // We need an add index last
+        array_unshift($line, $indexedcount);
 
         if (file_exists($new_path)) {
           $newHandle = fopen($new_path, 'a');
