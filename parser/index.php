@@ -3,13 +3,16 @@
 
 /**
  * @file
- * wip - parses and transforms a csv file - needs cleaning up
+ * Wip - parses and transforms a csv file - needs cleaning up.
  */
 
 $time_pre = microtime(TRUE);
 
-$parserFilesPath = "./parser_test/";
-$directory = new RecursiveDirectoryIterator($parserFilesPath);
+define("PARSERFILESPATH", "./parser_test/");
+define("APPCODESPATH", "appCodes.ini");
+
+// $parserFilesPath = "./parser_test/";
+$directory = new RecursiveDirectoryIterator(PARSERFILESPATH);
 $iterator = new RecursiveIteratorIterator($directory);
 
 $files = [];
@@ -23,42 +26,75 @@ foreach ($iterator as $info) {
 }
 echo "Getting App Codes...\n";
 
-// Lets assume app codes always has this path.
-$appCodesPath = $parserFilesPath . "appCodes.ini";
-// Lets store app codes in an array.
-$appCodesArray = file($appCodesPath);
+/**
+ * @class returns @array AppCodes
+ */
+class AppCodes {
+  public $appCodesPath; //string
+  public $appCodesArray; // original array
+  public $assocAppCodesArray; // new assoc array
 
-// Ok I think we need to parse this to make like an associative array e.g.
-// x ->  "efs-test-app-net = "EFS Test app .net"
-// becomes
-// efs-test-app-net -> "EFS Test app .net"
-// 1. removing the first item in the array.
-array_shift($appCodesArray);
-
-$assocAppCodesArray = [];
-foreach ($appCodesArray as $value) {
-  // We need to get the appcode before the "=".
-  preg_match("/[A-Za-z0-9 -]+ =/", $value, $matchesequals);
-  if (count($matchesequals)) {
-    $appCode = $matchesequals[0];
-    $appCode = trim($appCode, " =");
+  public function __construct() {
+    $this->appCodesPath = PARSERFILESPATH . APPCODESPATH;
+    $this->appCodesArray = file($this->appCodesPath);
+    $this->removeHeader();
+    $this->transformAssoc();
   }
 
-  // We also need the first match the string between the "'s.
-  preg_match("/\".+?\"/", $value, $matchesquotes);
-  if (count($matchesquotes)) {
-    $appTitle = $matchesquotes[0];
-    $appTitle = trim($appTitle, "\"");
+  /**
+   * removes header (first line)
+   */
+  public function removeHeader() {
+    array_shift($this->appCodesArray);
   }
 
-  // Echo $appCode, $appTitle;.
-  if ($appCode && $appTitle) {
-    $assocAppCodesArray[$appCode] = $appTitle;
+  /**
+   * returns an assoc array of app cades
+   */
+  public function get() {
+    return $this->assocAppCodesArray;
+  }
+
+  /**
+   * parses and extracts the app cades
+   */
+  public function transformAssoc() {
+    $items = $this->appCodesArray;
+    $this->assocAppCodesArray = [];
+
+    foreach ($items as $item) {
+      // We need to get the appcode before the "=".
+      preg_match("/[A-Za-z0-9 -]+ =/", $item, $matchesequals);
+      if (count($matchesequals)) {
+        $appCode = $matchesequals[0];
+        $appCode = trim($appCode, " =");
+      }
+
+      // We also need the first match the string between the "'s.
+      preg_match("/\".+?\"/", $item, $matchesquotes);
+      if (count($matchesquotes)) {
+        $appTitle = $matchesquotes[0];
+        $appTitle = trim($appTitle, "\"");
+      }
+
+      // Echo $appCode, $appTitle;.
+      if ($appCode && $appTitle) {
+
+        $this->assocAppCodesArray[$appCode] = $appTitle;
+
+      }
+    }
+
   }
 
 }
 
-// not sure how to match other tags - string replacement?
+// Initialise Array.
+$assocAppCodesArray = new AppCodes();
+
+// var_dump($assocAppCodesArray->get());
+// die;
+// Not sure how to match other tags - string replacement?
 echo "recursing directory to get list/array of files...\n";
 
 echo "starting load contents \n";
@@ -67,7 +103,7 @@ define("NEWHEADER", "id, appCode, deviceId, contactable, subscription_status"
 
 define("NEWHEADERARRAY", ["id", "appCode", "deviceId", "contactable",
   "subscription_status", "has_downloaded_free_product_status",
-  "has_downloaded_iap_product_status", "left_over_tags"
+  "has_downloaded_iap_product_status", "left_over_tags",
 ]);
 
 // For each file we want to get the filepath and use this to create
@@ -121,76 +157,78 @@ foreach ($files as $file) {
       }
       else {
 
-        // AppID - Lookup assocAppCodesArray - First field
-        $key = array_search($line[0], $assocAppCodesArray);
+        // AppID - Lookup assocAppCodesArray - First field.
+        $key = array_search($line[0], $assocAppCodesArray->get());
+        // set
         $line[0] = $key;
 
-        // contactable / field 3
+        // Contactable / field 3.
         $line[2] = (int) $line[2];
-        // lets  iterate though and extract all values  that contain status
-
-        // Status - field 4
+        // Lets  iterate though and extract all values  that contain status
+        // Status - field 4.
         $status_match = "/[A-Za-z_]+subscri+[A-Za-z]+/";
         preg_match_all($status_match, $line[3], $match_status_tags);
         $length_status_tags = count($match_status_tags[0]);
-        // lets append a field for now as we need to keep $line[3] for now
+        // Lets append a field for now as we need to keep $line[3] for now
         // lets assume that only one of these can be set i.e. the are mutally
-        // exclusive
+        // exclusive.
         if ($length_status_tags === 1) {
           $tag = $match_status_tags[0][0];
           $line[4] = $tag;
-          // clean up
-          $temp = str_replace($tag,"",$line[3]);
+          // Clean up.
+          $temp = str_replace($tag, "", $line[3]);
           $line[3] = $temp;
-        } else {
+        }
+        else {
           $line[4] = "subscription_unknown";
         }
 
-        // Status - field 5 has_downloaded_free_product_status
+        // Status - field 5 has_downloaded_free_product_status.
         $has_downloaded_free_product_status_tags = "/[A-Za-z_]+free+[A-Za-z]+/";
         preg_match_all($has_downloaded_free_product_status_tags, $line[3], $free_status_tags);
         $length_free_tags = count($free_status_tags[0]);
-        // lets append a field for now as we need to keep $line[3] for now
+        // Lets append a field for now as we need to keep $line[3] for now
         // lets assume that only one of these can be set i.e. the are mutally
-        // exclusive
+        // exclusive.
         if ($length_free_tags === 1) {
           $tag = $free_status_tags[0][0];
-          // set
+          // Set.
           $line[5] = $tag;
-          // clean up
-          $temp = str_replace($tag,"",$line[3]);
+          // Clean up.
+          $temp = str_replace($tag, "", $line[3]);
           $line[3] = $temp;
-        } else {
+        }
+        else {
           $line[5] = "downloaded_free_product_unknown";
         }
 
-        // Status - field 6 has_downloaded_free_product_status
+        // Status - field 6 has_downloaded_free_product_status.
         $has_downloaded_iap_product_status_tags = "/[A-Za-z_]+iap+[A-Za-z]+/";
         preg_match_all($has_downloaded_iap_product_status_tags, $line[3], $iap_status_tags);
         $length_iap_tags = count($iap_status_tags[0]);
-        // lets append a field for now as we need to keep $line[3] for now
+        // Lets append a field for now as we need to keep $line[3] for now
         // lets assume that only one of these can be set i.e. the are mutally
-        // exclusive
+        // exclusive.
         if ($length_iap_tags === 1) {
           $tag = $iap_status_tags[0][0];
-          // set
+          // Set.
           $line[6] = $tag;
-          // clean up
-          $temp = str_replace($tag,"",$line[3]);
+          // Clean up.
+          $temp = str_replace($tag, "", $line[3]);
           $line[3] = $temp;
-        } else {
+        }
+        else {
           $line[6] = "downloaded_iap_product_unknown";
         }
 
-        // lets move leftovers to last column
+        // Lets move leftovers to last column.
         $line[7] = $line[3];
 
-        //remove last column
-
-        // lets move the 4th $line[3] to end
+        // Remove last column
+        // Lets move the 4th $line[3] to end.
         array_splice($line, 3, 1);
 
-        // We need an add index last
+        // We need an add index last.
         array_unshift($line, $indexedcount);
 
         if (file_exists($new_path)) {
