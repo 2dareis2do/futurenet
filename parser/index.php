@@ -11,23 +11,44 @@ $time_pre = microtime(TRUE);
 define("PARSERFILESPATH", "./parser_test/");
 define("APPCODESPATH", "appCodes.ini");
 
-// $parserFilesPath = "./parser_test/";
-$directory = new RecursiveDirectoryIterator(PARSERFILESPATH);
-$iterator = new RecursiveIteratorIterator($directory);
+/**
+ * @class returns @array Files set as a string in PARSERFILESPATH constant
+ */
+class GetFiles {
+  private $directory;
+  private $iterator;
+  private $files;
 
-$files = [];
-foreach ($iterator as $info) {
-  if (substr($info->getPathname(), -1) !== "."
-  && substr($info->getPathname(), -9) !== ".DS_Store"
-  && substr($info->getPathname(), -4) !== ".ini"
-  && substr($info->getPathname(), -4) !== ".csv") {
-    $files[] = $info->getPathname();
+  public function __construct() {
+    $this->directory = new RecursiveDirectoryIterator(PARSERFILESPATH);
+    $this->iterator = new RecursiveIteratorIterator($this->directory);
+    $this->iterateFiles();
+  }
+
+  public function get() {
+    return $this->files;
+  }
+
+  private function iterateFiles() {
+    foreach ($this->iterator as $info) {
+      if (substr($info->getPathname(), -1) !== "."
+      && substr($info->getPathname(), -9) !== ".DS_Store"
+      && substr($info->getPathname(), -4) !== ".ini"
+      && substr($info->getPathname(), -4) !== ".csv") {
+        $this->files[] = $info->getPathname();
+      }
+    }
   }
 }
+
+$get_files = new GetFiles();
+$files = $get_files->get();
+
 echo "Getting App Codes...\n";
 
 /**
- * @class returns @array AppCodes
+ * @class returns @array AppCodes. Uses both PARSERFILESPATH and APPCODESPATH s
+ * constants
  */
 class AppCodes {
   private $appCodesPath; //string
@@ -92,9 +113,6 @@ class AppCodes {
 // Initialise Array.
 $assocAppCodesArray = new AppCodes();
 
-// var_dump($assocAppCodesArray->get());
-// die;
-// Not sure how to match other tags - string replacement?
 echo "recursing directory to get list/array of files...\n";
 
 echo "starting load contents \n";
