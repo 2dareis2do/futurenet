@@ -30,9 +30,9 @@ echo "Getting App Codes...\n";
  * @class returns @array AppCodes
  */
 class AppCodes {
-  public $appCodesPath; //string
-  public $appCodesArray; // original array
-  public $assocAppCodesArray; // new assoc array
+  private $appCodesPath; //string
+  private $appCodesArray; // original array
+  private $assocAppCodesArray; // new assoc array
 
   public function __construct() {
     $this->appCodesPath = PARSERFILESPATH . APPCODESPATH;
@@ -44,12 +44,12 @@ class AppCodes {
   /**
    * removes header (first line)
    */
-  public function removeHeader() {
+  private function removeHeader() {
     array_shift($this->appCodesArray);
   }
 
   /**
-   * returns an assoc array of app cades
+   * getter returns an assoc array of app codes
    */
   public function get() {
     return $this->assocAppCodesArray;
@@ -58,7 +58,7 @@ class AppCodes {
   /**
    * parses and extracts the app cades
    */
-  public function transformAssoc() {
+  private function transformAssoc() {
     $items = $this->appCodesArray;
     $this->assocAppCodesArray = [];
 
