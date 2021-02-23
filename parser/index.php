@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Wip - parses and transforms a csv file - needs cleaning up.
+ * Parses and transforms a csv file. Enjoy!
  */
 
 $time_pre = microtime(TRUE);
@@ -129,6 +129,26 @@ class TransformCSV {
     $this->transformFiles();
   }
 
+  private function extractTags(string $regex, array &$line, int $out, string $default) {
+    // Lets iterate though and extract all values  that contain status
+    $status_match = $regex; // 1. reg exp string
+    preg_match_all($status_match, $line[3], $match_status_tags); // 2. line
+    $length_status_tags = count($match_status_tags[0]);
+    // Lets append a field for now as we need to keep $line[3] for now
+    // lets assume that only one of these can be set i.e. the are mutally
+    // exclusive.
+    if ($length_status_tags === 1) {
+      $tag = $match_status_tags[0][0];
+      $line[$out] = $tag; // 3. field number to be replaced
+      // Clean up.
+      $temp = str_replace($tag, "", $line[3]);
+      $line[3] = $temp;
+    }
+    else {
+      $line[$out] = $default; //4. string with default value
+    }
+  }
+
   private function transformFiles() {
 
     foreach ($this->files as $file) {
@@ -175,68 +195,28 @@ class TransformCSV {
             $count++;
           }
           else {
-            // AppID - Lookup assocAppCodesArray - First field.
+
+            // AppID - Lookup assocAppCodesArray -  field 1
             $key = array_search($line[0], $this->assocAppCodesArray);
             // set
             $line[0] = $key;
+
             // Contactable / field 3.
             $line[2] = (int) $line[2];
-            // Lets  iterate though and extract all values  that contain status
-            // Status - field 4.
+
             $status_match = "/[A-Za-z_]+subscri+[A-Za-z]+/";
-            preg_match_all($status_match, $line[3], $match_status_tags);
-            $length_status_tags = count($match_status_tags[0]);
-            // Lets append a field for now as we need to keep $line[3] for now
-            // lets assume that only one of these can be set i.e. the are mutally
-            // exclusive.
-            if ($length_status_tags === 1) {
-              $tag = $match_status_tags[0][0];
-              $line[4] = $tag;
-              // Clean up.
-              $temp = str_replace($tag, "", $line[3]);
-              $line[3] = $temp;
-            }
-            else {
-              $line[4] = "subscription_unknown";
-            }
+
+            $this->extractTags($status_match, $line, 4, "subscription_unknown");
 
             // Status - field 5 has_downloaded_free_product_status.
-            $has_downloaded_free_product_status_tags = "/[A-Za-z_]+free+[A-Za-z]+/";
-            preg_match_all($has_downloaded_free_product_status_tags, $line[3], $free_status_tags);
-            $length_free_tags = count($free_status_tags[0]);
-            // Lets append a field for now as we need to keep $line[3] for now
-            // lets assume that only one of these can be set i.e. the are mutally
-            // exclusive.
-            if ($length_free_tags === 1) {
-              $tag = $free_status_tags[0][0];
-              // Set.
-              $line[5] = $tag;
-              // Clean up.
-              $temp = str_replace($tag, "", $line[3]);
-              $line[3] = $temp;
-            }
-            else {
-              $line[5] = "downloaded_free_product_unknown";
-            }
+            $free_match = "/[A-Za-z_]+free+[A-Za-z]+/";
+
+            $this->extractTags($free_match, $line, 5, "downloaded_free_product_unknown");
 
             // Status - field 6 has_downloaded_free_product_status.
-            $has_downloaded_iap_product_status_tags = "/[A-Za-z_]+iap+[A-Za-z]+/";
-            preg_match_all($has_downloaded_iap_product_status_tags, $line[3], $iap_status_tags);
-            $length_iap_tags = count($iap_status_tags[0]);
-            // Lets append a field for now as we need to keep $line[3] for now
-            // lets assume that only one of these can be set i.e. the are mutally
-            // exclusive.
-            if ($length_iap_tags === 1) {
-              $tag = $iap_status_tags[0][0];
-              // Set.
-              $line[6] = $tag;
-              // Clean up.
-              $temp = str_replace($tag, "", $line[3]);
-              $line[3] = $temp;
-            }
-            else {
-              $line[6] = "downloaded_iap_product_unknown";
-            }
+            $iap_tags = "/[A-Za-z_]+iap+[A-Za-z]+/";
+
+            $this->extractTags($iap_tags, $line, 6, "downloaded_iap_product_unknown");
 
             // Lets move leftovers to last column.
             $line[7] = $line[3];
@@ -257,7 +237,6 @@ class TransformCSV {
               $newHandle = fopen($new_path, 'w');
               // NEW LINE.
               fwrite($newHandle, $BOM);
-              // fwrite($newHandle, $indexedLine);.
               fputcsv($newHandle, $line);
               fclose($newHandle);
             }

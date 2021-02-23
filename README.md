@@ -85,6 +85,4 @@ Script is simply run:
 php index.php
 ```
 The script recursively iterates over directory to find any log files and then
-proceeds to beginning transforming to a csv file.
-
-At the moment this is unfinished and not very OO but this is a starting point.
+proceeds to transform into a csv file.
