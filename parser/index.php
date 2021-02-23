@@ -15,6 +15,9 @@ define("APPCODESPATH", "appCodes.ini");
  * @class returns @array Files set as a string in PARSERFILESPATH constant
  */
 class GetFiles {
+  // Hold the class instance.
+  private static $instance = null;
+
   private $directory;
   private $iterator;
   private $files;
@@ -24,6 +27,16 @@ class GetFiles {
     $this->directory = new RecursiveDirectoryIterator(PARSERFILESPATH);
     $this->iterator = new RecursiveIteratorIterator($this->directory);
     $this->iterateFiles();
+  }
+
+  public static function list()
+  {
+    if (self::$instance == null)
+    {
+      self::$instance = new GetFiles();
+    }
+
+    return self::$instance->get();
   }
 
   public function get() {
@@ -47,6 +60,8 @@ class GetFiles {
  * constants
  */
 class AppCodes {
+  private static $instance = null;
+
   private $appCodesPath; //string
   private $appCodesArray; // original array
   private $assocAppCodesArray; // new assoc array
@@ -59,6 +74,15 @@ class AppCodes {
     $this->transformAssoc();
   }
 
+  public static function list()
+  {
+    if (self::$instance == null)
+    {
+      self::$instance = new AppCodes();
+    }
+
+    return self::$instance->get();
+  }
   /**
    * removes header (first line)
    */
@@ -254,12 +278,9 @@ class TransformCSV {
 
 }
 
-// recursively get log files
-$get_files = new GetFiles();
-$files = $get_files->get();
-// get an index of and assoc array of app codes
-$assocAppCodes = new AppCodes();
-$assocAppCodesArray = $assocAppCodes->get();
+$files = GetFiles::list();
+$assocAppCodesArray = AppCodes::list();
+
 // start tarnsformation by initiating and passing both files and hash index
 $tcsv = new TransformCSV($files, $assocAppCodesArray);
 
