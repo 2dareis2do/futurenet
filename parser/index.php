@@ -22,7 +22,7 @@ class GetFiles {
   private $iterator;
   private $files;
 
-  public function __construct() {
+  private function __construct() {
     echo "recursing directory to get list/array of files...\n";
     $this->directory = new RecursiveDirectoryIterator(PARSERFILESPATH);
     $this->iterator = new RecursiveIteratorIterator($this->directory);
@@ -66,7 +66,7 @@ class AppCodes {
   private $appCodesArray; // original array
   private $assocAppCodesArray; // new assoc array
 
-  public function __construct() {
+  private function __construct() {
     echo "Getting App Codes...\n";
     $this->appCodesPath = PARSERFILESPATH . APPCODESPATH;
     $this->appCodesArray = file($this->appCodesPath);
