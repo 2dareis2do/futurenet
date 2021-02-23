@@ -129,9 +129,6 @@ class AppCodes {
 
 }
 
-// define("NEWHEADER", "id, appCode, deviceId, contactable, subscription_status"
-//           . ", has_downloaded_free_product_status, has_downloaded_iap_product_status , left_over_tags \n");
-
 define("NEWHEADERARRAY", ["id", "appCode", "deviceId", "contactable",
   "subscription_status", "has_downloaded_free_product_status",
   "has_downloaded_iap_product_status", "left_over_tags",
