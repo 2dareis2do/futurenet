@@ -22,6 +22,8 @@ class GetFiles {
   private $iterator;
   private $files;
 
+  private function __clone(){}
+
   private function __construct() {
     echo "recursing directory to get list/array of files...\n";
     $this->directory = new RecursiveDirectoryIterator(PARSERFILESPATH);
@@ -65,6 +67,8 @@ class AppCodes {
   private $appCodesPath; //string
   private $appCodesArray; // original array
   private $assocAppCodesArray; // new assoc array
+
+  private function __clone(){}
 
   private function __construct() {
     echo "Getting App Codes...\n";
